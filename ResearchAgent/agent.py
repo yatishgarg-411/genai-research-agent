@@ -1,26 +1,42 @@
-from google.adk.agents import LlmAgent
-from google.adk.tools.agent_tool import AgentTool
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
-from .prompt import ACADEMIC_COORDINATOR_PROMPT
+from google.adk.agents import Agent, SequentialAgent, ParallelAgent
+from google.adk.tools.agent_tool import AgentTool
+# from .sub_agents import content_struct, format_interpreter, latex_agent, content_integrator
+from .prompt import ROOT_AGENT_PROMPT
 # from .sub_agents.academic_newresearch import academic_newresearch_agent
-# from .sub_agents.academic_websearch import academic_websearch_agent
+# from .sub_agents.from .sub_agents.content_struct_agent import agent as content_struct
+from .sub_agents.content_struct_agent.agent import content_struct
+from .sub_agents.format_interpreter_agent.agent import format_interpreter
+from .sub_agents.latex_agent.agent import latex_agent
+from .sub_agents.content_integrator_agent.agent import content_integrator
+
 
 MODEL = "gemini-2.5-flash"
 
+par_agent= ParallelAgent(
+     name="extraction_agent",
+     sub_agents=[content_struct, format_interpreter],
+     description="Runs multiple research agents in parallel to gather information."
+ )
 
-academic_coordinator = LlmAgent(
-    name="academic_coordinator",
-    model=MODEL,
-    description=(
-        "analyzing seminal papers provided by the users, "
-        "providing research advice, locating current papers "
-        "relevant to the seminal paper, generating suggestions "
-        "for new research directions, and accessing web resources "
-        "to acquire knowledge"
-    ),
-    instruction=ACADEMIC_COORDINATOR_PROMPT,
-    output_key="seminal_paper",
-    
+seq_agent=SequentialAgent(
+    name="ResearchPipelineAgent",
+    sub_agents=[par_agent, content_integrator, latex_agent],
+    description="Executes a sequence of code writing, reviewing, and refactoring.",
+    # The agents will run in the order provided: Writer -> Reviewer -> Refactorer
 )
 
-root_agent = academic_coordinator
+
+root_agent = Agent(
+    name="root_agent",
+    model=MODEL,
+    description=(
+        "Root agent that coordinates academic research tasks."
+    ),
+    instruction=ROOT_AGENT_PROMPT,
+    sub_agents=[seq_agent]
+)
+
