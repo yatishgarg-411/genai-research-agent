@@ -12,19 +12,20 @@ from .sub_agents.content_struct_agent.agent import content_struct
 from .sub_agents.format_interpreter_agent.agent import format_interpreter
 from .sub_agents.latex_agent.agent import latex_agent
 from .sub_agents.content_integrator_agent.agent import content_integrator
+from .sub_agents.content_enricher.agent import content_enricher
 
 
 MODEL = "gemini-2.5-flash"
 
-par_agent= ParallelAgent(
-     name="extraction_agent",
-     sub_agents=[content_struct, format_interpreter],
-     description="Runs multiple research agents in parallel to gather information."
- )
+# par_agent = ParallelAgent(
+#     name="extraction_agent",
+#     sub_agents=[content_struct, format_interpreter],
+#     description="Runs multiple research agents in parallel to gather information.",
+# )
 
 seq_agent=SequentialAgent(
     name="ResearchPipelineAgent",
-    sub_agents=[par_agent, content_integrator, latex_agent],
+    sub_agents=[content_struct,content_enricher, format_interpreter, content_integrator, latex_agent],
     description="Executes a sequence of code writing, reviewing, and refactoring.",
     # The agents will run in the order provided: Writer -> Reviewer -> Refactorer
 )
