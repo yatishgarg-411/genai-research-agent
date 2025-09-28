@@ -10,43 +10,35 @@ export function AuthForm({ onSuccess }) {
     password: ''
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const { signIn, signUp } = useAuth();
-
+  const { signIn, signUp, loading } = useAuth();
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
+    
+    let result;
+    if (isLogin) {
+      result = await signIn(formData.email, formData.password);
+    } else {
+      result = await signUp(formData.email, formData.password, formData.name);
+    }
 
-    try {
-      let result;
-      if (isLogin) {
-        result = await signIn(formData.email, formData.password);
-      } else {
-        result = await signUp(formData.email, formData.password, formData.name);
+    if (result.error) {
+      setError(result.error);
+      if (!isLogin && result.error === "User Already exists") {
+        setIsLogin(true);
       }
-
-      if (result.error) {
-        setError(result.error);
-        if (!isLogin && result.error === "User Already exists") {
-          setIsLogin(true);
-        }
-        else if(isLogin && result.error === "User not registered") {
-            setIsLogin(false);
-          
-        }
-      } else {
-        setFormData({
-          name: '',
-          email: '',
-          password: ''
-        });
-        onSuccess();
+      else if(isLogin && result.error === "User not registered") {
+          setIsLogin(false);
       }
-    } finally {
-      setLoading(false);
+    } else {
+      setFormData({
+        name: '',
+        email: '',
+        password: ''
+      });
+      onSuccess();
     }
   };
 
