@@ -1,11 +1,16 @@
 from fastapi import FastAPI
-import uvicorn
+from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI()
+from routes.users import router as UserRouter
 
-@app.get("/")
-def read_root():
-    return {"message": "Hello, FastAPI running on port 6000!"}
+app=FastAPI()
 
-if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=6000, reload=True)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # React frontend
+    allow_credentials=True,
+    allow_methods=["*"],  # GET, POST, PUT, DELETE, etc.
+    allow_headers=["*"],  # Authorization, Content-Type, etc.
+)
+
+app.include_router(UserRouter)
